@@ -1,1 +1,357 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lista de la Compra</title>
+  <style>
+    :root {
+      --primary: #2563eb;
+      --primary-dark: #1d4ed8;
+      --bg: #f8fafc;
+      --card-bg: #ffffff;
+      --text: #0f172a;
+      --text-muted: #64748b;
+      --border: #e2e8f0;
+      --success: #16a34a;
+      --danger: #ef4444;
+    }
 
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+    }
+
+    body {
+      background-color: var(--bg);
+      color: var(--text);
+      display: flex;
+      justify-content: center;
+      min-height: 100vh;
+      padding: 1rem;
+    }
+
+    .app-container {
+      width: 100%;
+      max-width: 500px;
+      display: flex;
+      flex-direction: column;
+      gap: 1.25rem;
+    }
+
+    header {
+      background: var(--card-bg);
+      padding: 1.25rem;
+      border-radius: 16px;
+      box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
+      border: 1px solid var(--border);
+    }
+
+    h1 {
+      font-size: 1.4rem;
+      margin-bottom: 0.75rem;
+      color: var(--primary);
+      text-align: center;
+    }
+
+    .date-picker-container {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.5rem;
+      background: #f1f5f9;
+      padding: 0.5rem 0.75rem;
+      border-radius: 10px;
+    }
+
+    .date-picker-container label {
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--text-muted);
+    }
+
+    input[type="date"] {
+      border: none;
+      background: transparent;
+      font-size: 0.95rem;
+      font-weight: bold;
+      color: var(--text);
+      outline: none;
+    }
+
+    .add-form {
+      display: flex;
+      gap: 0.5rem;
+    }
+
+    .add-form input {
+      flex: 1;
+      padding: 0.75rem 1rem;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      font-size: 1rem;
+      outline: none;
+    }
+
+    .add-form input:focus {
+      border-color: var(--primary);
+    }
+
+    button {
+      cursor: pointer;
+      border: none;
+      border-radius: 10px;
+      font-weight: 600;
+      transition: all 0.2s;
+    }
+
+    .btn-primary {
+      background: var(--primary);
+      color: white;
+      padding: 0.75rem 1.25rem;
+    }
+
+    .btn-primary:hover {
+      background: var(--primary-dark);
+    }
+
+    .btn-copy {
+      width: 100%;
+      padding: 0.75rem;
+      background: #e0e7ff;
+      color: #3730a3;
+      font-size: 0.9rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+    }
+
+    .btn-copy:hover {
+      background: #c7d2fe;
+    }
+
+    .item-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+
+    .item {
+      background: var(--card-bg);
+      padding: 0.85rem 1rem;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border: 1px solid var(--border);
+      box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+      transition: opacity 0.2s;
+    }
+
+    .item-text {
+      font-size: 1rem;
+      cursor: pointer;
+      user-select: none;
+      flex: 1;
+      padding-right: 0.5rem;
+    }
+
+    .item.completed {
+      background-color: #f8fafc;
+      opacity: 0.6;
+    }
+
+    .item.completed .item-text {
+      text-decoration: line-through;
+      color: var(--text-muted);
+    }
+
+    .actions {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .btn-icon {
+      background: transparent;
+      padding: 0.4rem;
+      color: var(--text-muted);
+      border-radius: 6px;
+    }
+
+    .btn-icon:hover {
+      background: #fee2e2;
+      color: var(--danger);
+    }
+
+    .empty-state {
+      text-align: center;
+      color: var(--text-muted);
+      padding: 2rem 1rem;
+      font-size: 0.95rem;
+    }
+  </style>
+</head>
+<body>
+
+<div class="app-container">
+  <header>
+    <h1>🛒 Lista de la Compra</h1>
+    <div class="date-picker-container">
+      <label for="dateSelect">Fecha:</label>
+      <input type="date" id="dateSelect">
+    </div>
+  </header>
+
+  <form class="add-form" id="addForm">
+    <input type="text" id="itemInput" placeholder="Añadir producto..." required autocomplete="off">
+    <button type="submit" class="btn-primary">Añadir</button>
+  </form>
+
+  <button id="copyToTodayBtn" class="btn-copy" style="display: none;">
+    📋 Copiar esta lista al día de hoy
+  </button>
+
+  <ul class="item-list" id="itemList"></ul>
+  <div id="emptyState" class="empty-state" style="display: none;">No hay elementos en esta lista.</div>
+</div>
+
+<script>
+  // Utilidades de fecha local (formato YYYY-MM-DD)
+  const getTodayString = () => {
+    const today = new Date();
+    const year = today.getFullYear();
+    const month = String(today.getMonth() + 1).padStart(2, '0');
+    const day = String(today.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  };
+
+  const dateSelect = document.getElementById('dateSelect');
+  const addForm = document.getElementById('addForm');
+  const itemInput = document.getElementById('itemInput');
+  const itemList = document.getElementById('itemList');
+  const emptyState = document.getElementById('emptyState');
+  const copyToTodayBtn = document.getElementById('copyToTodayBtn');
+
+  const todayStr = getTodayString();
+  dateSelect.value = todayStr;
+
+  // Cargar datos de LocalStorage
+  const getStoredLists = () => JSON.parse(localStorage.getItem('shopping_lists') || '{}');
+  const saveLists = (lists) => localStorage.setItem('shopping_lists', JSON.stringify(lists));
+
+  const render = () => {
+    const selectedDate = dateSelect.value;
+    const isToday = selectedDate === todayStr;
+    const lists = getStoredLists();
+    const items = lists[selectedDate] || [];
+
+    // Mostrar u ocultar botón de copiar lista si no estamos en el día de hoy
+    if (!isToday && items.length > 0) {
+      copyToTodayBtn.style.display = 'flex';
+    } else {
+      copyToTodayBtn.style.display = 'none';
+    }
+
+    itemList.innerHTML = '';
+
+    if (items.length === 0) {
+      emptyState.style.display = 'block';
+    } else {
+      emptyState.style.display = 'none';
+      items.forEach((item, index) => {
+        const li = document.createElement('li');
+        li.className = `item ${item.completed ? 'completed' : ''}`;
+        
+        li.innerHTML = `
+          <span class="item-text">${escapeHtml(item.text)}</span>
+          <div class="actions">
+            <button class="btn-icon" onclick="deleteItem(${index})" title="Eliminar">🗑️</button>
+          </div>
+        `;
+
+        // Toggle estado al hacer clic en el texto
+        li.querySelector('.item-text').addEventListener('click', () => toggleItem(index));
+        itemList.appendChild(li);
+      });
+    }
+  };
+
+  const escapeHtml = (text) => {
+    const div = document.createElement('div');
+    div.innerText = text;
+    return div.innerHTML;
+  };
+
+  // Añadir ítem
+  addForm.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const text = itemInput.value.trim();
+    if (!text) return;
+
+    const selectedDate = dateSelect.value;
+    const lists = getStoredLists();
+
+    if (!lists[selectedDate]) lists[selectedDate] = [];
+    lists[selectedDate].push({ text, completed: false });
+
+    saveLists(lists);
+    itemInput.value = '';
+    render();
+  });
+
+  // Cambiar estado (comprado / no comprado)
+  window.toggleItem = (index) => {
+    const selectedDate = dateSelect.value;
+    const lists = getStoredLists();
+    if (lists[selectedDate] && lists[selectedDate][index]) {
+      lists[selectedDate][index].completed = !lists[selectedDate][index].completed;
+      saveLists(lists);
+      render();
+    }
+  };
+
+  // Eliminar ítem
+  window.deleteItem = (index) => {
+    const selectedDate = dateSelect.value;
+    const lists = getStoredLists();
+    if (lists[selectedDate]) {
+      lists[selectedDate].splice(index, 1);
+      if (lists[selectedDate].length === 0) delete lists[selectedDate];
+      saveLists(lists);
+      render();
+    }
+  };
+
+  // Copiar lista seleccionada al día actual
+  copyToTodayBtn.addEventListener('click', () => {
+    const selectedDate = dateSelect.value;
+    const lists = getStoredLists();
+    const sourceItems = lists[selectedDate] || [];
+
+    if (sourceItems.length === 0) return;
+
+    const todayItems = lists[todayStr] || [];
+    
+    // Clonar ítems y reiniciar estado "completado" para la nueva lista
+    const newItems = sourceItems.map(item => ({ text: item.text, completed: false }));
+    
+    lists[todayStr] = [...todayItems, ...newItems];
+    saveLists(lists);
+
+    dateSelect.value = todayStr;
+    render();
+  });
+
+  // Escuchar cambios de fecha
+  dateSelect.addEventListener('change', render);
+
+  // Carga inicial
+  render();
+</script>
+</body>
+</html>
