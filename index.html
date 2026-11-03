@@ -47,7 +47,6 @@
       border-radius: 16px;
       box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
       border: 1px solid var(--border);
-      position: relative;
     }
 
     .top-bar {
@@ -74,29 +73,53 @@
       outline: none;
     }
 
-    .date-picker-container {
+    .date-navigation {
       display: flex;
       align-items: center;
       justify-content: space-between;
       gap: 0.5rem;
       background: #f1f5f9;
-      padding: 0.5rem 0.75rem;
+      padding: 0.5rem;
       border-radius: 10px;
     }
 
-    .date-picker-container label {
-      font-size: 0.85rem;
-      font-weight: 600;
-      color: var(--text-muted);
+    .nav-btn {
+      background: #ffffff;
+      border: 1px solid var(--border);
+      padding: 0.4rem 0.8rem;
+      border-radius: 6px;
+      font-weight: bold;
+      color: var(--text);
+      cursor: pointer;
+    }
+
+    .nav-btn:hover {
+      background: #e2e8f0;
+    }
+
+    .date-display {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
     }
 
     input[type="date"] {
-      border: none;
-      background: transparent;
+      border: 1px solid var(--border);
+      background: #ffffff;
+      padding: 0.25rem 0.5rem;
+      border-radius: 6px;
       font-size: 0.95rem;
       font-weight: bold;
       color: var(--text);
       outline: none;
+    }
+
+    .btn-today {
+      font-size: 0.75rem;
+      padding: 0.3rem 0.6rem;
+      background: var(--primary);
+      color: white;
+      border-radius: 6px;
     }
 
     .add-form {
@@ -225,9 +248,13 @@
         <option value="uk">🇺🇦 Українська</option>
       </select>
     </div>
-    <div class="date-picker-container">
-      <label for="dateSelect" id="labelDate">Fecha:</label>
-      <input type="date" id="dateSelect">
+    <div class="date-navigation">
+      <button class="nav-btn" id="btnPrevDate" title="Día anterior">◀</button>
+      <div class="date-display">
+        <input type="date" id="dateSelect">
+        <button class="btn-today" id="btnToday">Hoy</button>
+      </div>
+      <button class="nav-btn" id="btnNextDate" title="Día posterior">▶</button>
     </div>
   </header>
 
@@ -245,13 +272,8 @@
 </div>
 
 <script>
-  // Diccionario de traducciones
   const translations = {
     es: {
       title: "🛒 Lista de la Compra",
-      dateLabel: "Fecha:",
-      placeholder: "Añadir producto...",
-      btnAdd: "Añadir",
-      btnCopy: "📋 Copiar esta lista al día de hoy",
-      emptyState: "No hay elementos en esta lista.",
-      deleteTip
+      btnToday: "Hoy",
+      
